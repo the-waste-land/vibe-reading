@@ -4,12 +4,23 @@
 
 set -e
 
-NOTES_DIR="${DEEP_READING_NOTES_DIR:-$HOME/.claude/skills/deep-reading/notes}"
-DB_FILE="$NOTES_DIR/reading.db"
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source config for helper functions
+source "$SCRIPT_DIR/config.sh"
+
+NOTES_DIR="$(_deep_reading_get_notes_dir)"
+DB_FILE="$(_deep_reading_get_db_file)"
+
+# Check SQLite version
+echo "Checking SQLite version..." >&2
+if ! _deep_reading_check_sqlite_version; then
+    exit 1
+fi
 
 # Create notes directory if it doesn't exist
-mkdir -p "$NOTES_DIR/sources"
-mkdir -p "$NOTES_DIR/themes"
+_deep_reading_ensure_dirs
 
 echo "Initializing Deep Reading database: $DB_FILE" >&2
 
@@ -48,6 +59,7 @@ CREATE TABLE IF NOT EXISTS tags (
 
 -- Backlinks table: [[wikilink]] support
 CREATE TABLE IF NOT EXISTS backlinks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     source_id TEXT NOT NULL,                 -- where the link comes from
     target_id TEXT NOT NULL,                 -- what is being linked to
     context TEXT,                            -- surrounding text for context
@@ -70,33 +82,11 @@ CREATE TABLE IF NOT EXISTS notes (
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
 );
 
--- Full-text search on sources and notes
-CREATE VIRTUAL TABLE IF NOT EXISTS sources_fts USING fts5(
-    title,
-    author,
-    content,
-    content_rowid TEXT
-);
-
+-- Full-text search on notes only (sources uses TEXT primary key which doesn't work well with FTS5 rowid)
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
     content,
-    content_rowid INTEGER
+    content_rowid
 );
-
--- Triggers to keep FTS tables in sync
-CREATE TRIGGER IF NOT EXISTS sources_fts_insert AFTER INSERT ON sources BEGIN
-    INSERT INTO sources_fts(rowid, title, author, content)
-    VALUES (new.rowid, new.title, new.author, '');
-END;
-
-CREATE TRIGGER IF NOT EXISTS sources_fts_delete AFTER DELETE ON sources BEGIN
-    DELETE FROM sources_fts WHERE rowid = old.rowid;
-END;
-
-CREATE TRIGGER IF NOT EXISTS sources_fts_update AFTER UPDATE ON sources BEGIN
-    UPDATE sources_fts SET title = new.title, author = new.author
-    WHERE rowid = old.rowid;
-END;
 
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_sources_type ON sources(type);
