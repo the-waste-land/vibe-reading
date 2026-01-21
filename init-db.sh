@@ -4,12 +4,21 @@
 
 set -e
 
-NOTES_DIR="${DEEP_READING_NOTES_DIR:-$HOME/.claude/skills/deep-reading/notes}"
-DB_FILE="$NOTES_DIR/reading.db"
+# Get script directory and source config
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config.sh"
+
+NOTES_DIR="$(_deep_reading_get_notes_dir)"
+DB_FILE="$(_deep_reading_get_db_file)"
+
+# Check SQLite version
+echo "Checking SQLite version..." >&2
+if ! _deep_reading_check_sqlite_version; then
+    exit 1
+fi
 
 # Create notes directory if it doesn't exist
-mkdir -p "$NOTES_DIR/sources"
-mkdir -p "$NOTES_DIR/themes"
+_deep_reading_ensure_dirs
 
 echo "Initializing Deep Reading database: $DB_FILE" >&2
 
