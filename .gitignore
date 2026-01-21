@@ -4,7 +4,12 @@
 *.db-wal
 *.db-journal
 
-# Transcript caches
+# Transcript and content files (user-specific)
+notes/sources/*/transcript.txt
+notes/themes/**/*.md
+notes/reading.db
+
+# Transcript cache directory
 notes/transcripts/
 
 # Temporary files
@@ -25,6 +30,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Notes that should be synced
-!notes/sources/
-!notes/themes/
+# Keep directory structure with .gitkeep
+!.gitkeep
+!notes/sources/.gitkeep
+!notes/themes/.gitkeep
