@@ -1,0 +1,30 @@
+# Database files (user-specific)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Transcript caches
+notes/transcripts/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Notes that should be synced
+!notes/sources/
+!notes/themes/
