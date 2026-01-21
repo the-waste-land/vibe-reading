@@ -582,6 +582,10 @@ CREATE TABLE links (
 OBSIDIAN_VAULT="/Users/liweixin/smart notes"
 DEEP_READING_DIR="DeepReading"
 
+# 笔记子目录
+SOURCES_DIR="Sources"    # 主笔记 (来源概览)
+CARDS_DIR="Cards"        # 概念卡片 (原子化知识)
+
 # 缓存设置
 CACHE_DIR="$HOME/.deep-reading/cache"
 CACHE_MAX_SIZE="10G"
@@ -595,6 +599,10 @@ SUBTITLE_OFFSET=0
 AUTO_PROCESS=true
 CARD_MIN_IMPORTANCE=0.7  # 只生成重要度 > 0.7 的卡片
 
+# 语音笔记
+VOICE_BACKEND="macos"    # macos | whisper
+WHISPER_MODEL="base"     # tiny | base | small | medium
+
 # TUI 设置
 THEME="dark"
 SHOW_TIMESTAMPS=true
@@ -602,12 +610,15 @@ SHOW_TIMESTAMPS=true
 
 ---
 
-## 8. 待确认问题
+## 8. 已确认决策
 
-1. **语音笔记**：用什么录音/转文字？系统麦克风 + Whisper？
-2. **跨语言**：是否需要 AI 同声传译功能？优先级如何？
-3. **移动端同步**：是否需要和手机 Obsidian 同步？
-4. **多人协作**：是否考虑分享笔记/协作阅读？
+| 问题 | 决策 | 说明 |
+|------|------|------|
+| **语音笔记** | macOS 原生 + Whisper 可选 | 默认用系统语音识别，需要高准确率时切换 Whisper |
+| **跨语言翻译** | P2 可选 | 用户英文能力足够，暂不需要 |
+| **AI 配音** | P2 可选 | 后期有空再做 |
+| **移动端同步** | 不处理 | 用户已用 GitHub 同步 Obsidian vault |
+| **多人协作** | 不需要 | 纯个人工具 |
 
 ---
 
