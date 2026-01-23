@@ -23,12 +23,17 @@ def process_source(source_id: str):
 
     source = dict(row)
     cache_path = Path(source["cache_path"])
-    transcript_path = cache_path / "transcript.txt"
+    source_type = source.get("type", "youtube")
 
-    # Read transcript
+    # Try different content files based on source type
     transcript = ""
-    if transcript_path.exists():
-        transcript = transcript_path.read_text()
+    if source_type == "pdf":
+        content_path = cache_path / "content.txt"
+    else:
+        content_path = cache_path / "transcript.txt"
+
+    if content_path.exists():
+        transcript = content_path.read_text()
 
     print(f"Generating inspectional report for: {source['title']}")
 
@@ -40,6 +45,7 @@ def process_source(source_id: str):
         url=source["url"],
         duration=source["duration"],
         transcript=transcript,
+        source_type=source_type,
     )
 
     # Save to Obsidian
