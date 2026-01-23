@@ -3,449 +3,120 @@ name: deep-reading
 description: Use when reading books, academic papers, or long-form documents from URLs or PDFs and needing structured analysis, comprehension, or comparison
 ---
 
-# Deep Reading Agent
+# Deep Reading Agent v2
 
 ## Overview
-Systematic reading assistant based on Mortimer Adler's "How to Read a Book". Implements three levels of reading: Inspectional (quick overview), Analytical (deep comprehension), and Comparative (cross-document synthesis). Supports URLs, PDFs, and progressive deepening with persistent reading notes.
+深度阅读助手，支持 YouTube 视频、播客、网页等内容的深度阅读和笔记管理。基于 Mortimer Adler 的《如何阅读一本书》实现三层阅读：检视阅读、分析阅读、对比阅读。
 
 ## When to Use
 
-```dot
-digraph reading_level {
-    "User provides reading material" [shape=diamond];
-    "Need quick overview?" [shape=diamond];
-    "Need deep understanding?" [shape=diamond];
-    "Comparing multiple sources?" [shape=diamond];
+当用户说以下内容时，自动触发此 skill：
+- "帮我看/读/学习这个视频" + YouTube URL
+- "深度阅读这个内容"
+- "分析这个视频/文章"
+- "播放 xxx" (已下载的内容)
 
-    "Inspectional Reading" [shape=box];
-    "Analytical Reading" [shape=box];
-    "Comparative Reading" [shape=box];
+## Quick Start - AI 操作流程
 
-    "User provides reading material" -> "Need quick overview?";
-    "Need quick overview?" -> "Inspectional Reading" [label="yes"];
-    "Inspectional Reading" -> "Need deep understanding?";
-    "Need deep understanding?" -> "Analytical Reading" [label="yes"];
-    "Analytical Reading" -> "Comparing multiple sources?";
-    "Comparing multiple sources?" -> "Comparative Reading" [label="yes"];
-}
-```
+### 1. YouTube 视频处理
 
-**Use cases:**
-- User provides a URL or PDF and asks to "read this" or "summarize"
-- User asks questions about document content, structure, or arguments
-- User wants to compare multiple documents or find common themes
-- User requests progressive deeper analysis of previously read material
+当用户提供 YouTube URL 时：
 
-**Input types:**
-- HTTP/HTTPS URLs (web articles, PDFs, papers)
-- YouTube URLs (video transcripts/subtitles)
-- Local PDF file paths
-- Previously saved reading notes for continuation
-
-## Quick Reference
-
-| Reading Level | Purpose | Time | Output |
-|--------------|---------|------|--------|
-| **Inspectional** | Quick overview, decide if worth reading deeply | 5-15 min | Structure scan, key points, summary |
-| **Analytical** | Deep comprehension, mastery of content | 30-60 min | Full analysis, Q&A, critique |
-| **Comparative** | Synthesize multiple sources | 45-90 min | Themed comparison, synthesis |
-
-## Core Pattern
-
-### Phase 1: Pre-Reading Check
-Before diving in, ALWAYS check:
-1. Has this document been read before? Check `~/.claude/skills/deep-reading/notes/`
-2. What level of reading does user want?
-3. Is input a URL or local PDF?
-
-### Phase 2: Content Acquisition
-Use appropriate tool based on input type:
 ```bash
-# For URLs
-mcp__web_reader__webReader(url)
+# Step 1: 下载内容
+cd /Users/liweixin/.claude/skills/deep-reading
+python3 -m src.fetcher.cli "YOUTUBE_URL"
 
-# For YouTube URLs - get transcript
-~/.claude/skills/deep-reading/fetch-youtube-transcript.sh "youtube_url"
+# Step 2: 生成检视阅读报告
+python3 -m src.processor.cli youtube_VIDEO_ID
 
-# For local PDFs
-Read(file_path)  # Claude can read PDFs natively
+# Step 3: 告诉用户笔记已生成，可在 Obsidian 查看
 ```
 
-### Phase 3: Apply Reading Level
-Follow the specific protocol for Inspectional, Analytical, or Comparative reading.
+### 2. 播放已下载内容
 
-### Phase 4: Output & Archive
-- Generate structured Markdown report + Q&A
-- Save notes to `~/.claude/skills/deep-reading/notes/{doc-id}.md`
-- Offer follow-up questions or deeper reading options
-
-## Implementation
-
-### Reading Level 1: Inspectional Reading (检视阅读)
-
-**Purpose:** Quickly understand what the book/document is about and decide if it's worth reading deeply.
-
-**Protocol:**
-
-1. **Pre-scan (30 seconds)**
-   - Read title, subtitle, author, publication info
-   - Read table of contents
-   - Read preface/introduction and conclusion
-   - Scan index for key terms
-
-2. **Surface reading (5-10 minutes)**
-   - Read first and last paragraph of each chapter
-   - Identify key concepts and terminology
-   - Note the author's main questions/problems
-   - Identify the book's category (practical, theoretical, etc.)
-
-3. **Output format:**
-   ```markdown
-   # Inspectional Reading Report: [Title]
-
-   ## Document Metadata
-   - **Source:** [URL or file path]
-   - **Date Read:** [timestamp]
-   - **Document Type:** [article/book/paper/other]
-
-   ## Structural Overview
-   - **Main Category:** [theoretical/practical/fiction/other]
-   - **Key Question:** [What problem is author solving?]
-   - **Thesis Statement:** [One-sentence summary]
-
-   ## Table of Contents Analysis
-   [Brief comment on structure and organization]
-
-   ## Key Concepts Identified
-   - [Concept 1]: [brief definition]
-   - [Concept 2]: [brief definition]
-   ...
-
-   ## Quick Summary
-   [2-3 paragraph summary in your own words]
-
-   ## Recommendations
-   - **Worth deep reading?** [Yes/No/Maybe]
-   - **Suggested focus areas:** [chapters/sections]
-   - **Prerequisite knowledge:** [what reader should know]
-
-   ## Quick Q&A
-   **Q: What is this document about?**
-   A: [One sentence answer]
-
-   **Q: Who should read this?**
-   A: [Target audience]
-
-   **Q: What will I learn?**
-   A: [Key takeaways]
-   ```
-
-### Reading Level 2: Analytical Reading (分析阅读)
-
-**Purpose:** Achieve deep comprehension and mastery of the content.
-
-**Protocol:**
-
-**Stage 1: Classify the Book**
-- What kind of book is it?
-- What is the subject matter?
-- What is the author's field/genre?
-
-**Stage 2: State the Unity**
-- State the main problem/question in one sentence
-- Summarize the book's main argument in a few sentences
-- Identify the major parts and how they relate
-
-**Stage 3: Analyze the Structure**
-- Outline the major parts and their order
-- Define key problems author is trying to solve
-- Identify which problems are solved, which are not
-
-**Stage 4: Define Terms**
-- Find important words and determine author's meaning
-- Mark specialized terminology
-- Create glossary of key terms
-
-**Stage 5: Interpret Propositions**
-- Identify author's main assertions/propositions
-- Locate author's arguments (premises + conclusions)
-- Examine the evidence/support provided
-
-**Stage 6: Evaluate**
-- Has author solved the stated problem?
-- Is the argument complete?
-- Do you agree/disagree? Why?
-
-**Output format:**
-   ```markdown
-   # Analytical Reading Report: [Title]
-
-   ## Document Metadata
-   - **Source:** [URL or file path]
-   - **Date Read:** [timestamp]
-   - **Reading Level:** Analytical
-
-   ## Classification
-   - **Genre/Category:** [specific classification]
-   - **Subject Domain:** [academic field/practical area]
-   - **Author's Approach:** [descriptive/normative/analytical/etc]
-
-   ## The Core Unity
-   **Main Question:**
-   [The single problem author is addressing]
-
-   **Thesis Statement:**
-   [One sentence capturing the central argument]
-
-   **Extended Summary:**
-   [4-6 sentences explaining the full argument]
-
-   ## Structural Analysis
-   ```
-   [Hierarchical outline of major parts and their relationships]
-   ```
-
-   ## Key Terms Glossary
-   | Term | Author's Definition | Usage Notes |
-   |------|---------------------|-------------|
-   | ... | ... | ... |
-
-   ## Propositions & Arguments
-   ### Proposition 1: [Statement]
-   - **Argument:** [How author supports it]
-   - **Evidence:** [Data, logic, examples]
-   - **Strength:** [Strong/Weak/Mixed]
-
-   [Repeat for key propositions]
-
-   ## Critical Evaluation
-   **Problems Solved:**
-   - [List problems author successfully addresses]
-
-   **Problems Unsolved/Partial:**
-   - [List problems inadequately addressed]
-
-   **Agreements & Disagreements:**
-   - Points of agreement: [...]
-   - Points of disagreement: [...]
-   - Reasons for disagreement: [...]
-
-   ## Detailed Q&A
-   **Q: What is the author's main argument?**
-   A: [Detailed answer]
-
-   **Q: What evidence does the author provide?**
-   A: [Types and quality of evidence]
-
-   **Q: What are the implications of this work?**
-   A: [Consequences and applications]
-
-   **Q: How does this relate to [related topic]?**
-   A: [Connections to other work]
-
-   ## Reflection Questions for Reader
-   [Generate 3-5 thought-provoking questions to test understanding]
-   ```
-
-### Reading Level 3: Comparative Reading (对比阅读)
-
-**Purpose:** Synthesize insights across multiple documents on related topics.
-
-**Protocol:**
-
-1. **Establish neutral territory**
-   - Identify common theme/problem across texts
-   - Create a neutral vocabulary
-   - Define the scope of comparison
-
-2. **Analyze each text individually first**
-   - Apply analytical reading to each
-   - Document each author's position
-
-3. **Compare and contrast**
-   - Find points of agreement
-   - Identify genuine disagreements
-   - Note differences in approach/methodology
-   - Trace influence between authors
-
-4. **Synthesize**
-   - Create integrated understanding
-   - Identify gaps in the discourse
-   - Formulate open questions
-
-**Output format:**
-   ```markdown
-   # Comparative Reading Report: [Theme]
-
-   ## Documents Analyzed
-   1. **[Title 1]** by [Author] - [brief characterization]
-   2. **[Title 2]** by [Author] - [brief characterization]
-   ...
-
-   ## Common Theme
-   [The problem/question that unites these texts]
-
-   ## Positions on Key Issues
-
-   ### Issue 1: [Specific question]
-   | Document | Position | Evidence | Methodology |
-   |----------|----------|----------|-------------|
-   | ... | ... | ... | ... |
-
-   ### Issue 2: [Specific question]
-   [Similar table]
-
-   ## Points of Agreement
-   - **Agreement 1:** [description]
-     - Who agrees: [authors]
-     - Nuances/differences: [how they agree but differently]
-   ...
-
-   ## Points of Disagreement
-   - **Disagreement 1:** [description]
-     - Side A: [position and reasoning]
-     - Side B: [position and reasoning]
-     - Root of disagreement: [different premises? different data? different values?]
-   ...
-
-   ## Synthesis: Integrated Understanding
-   [What do we understand better by reading these together?]
-
-   ## Gaps & Open Questions
-   - **Unanswered questions:** [...]
-   - **Missing perspectives:** [...]
-   - **Avenues for further research:** [...]
-
-   ## Comparative Q&A
-   **Q: How do the authors' approaches differ?**
-   A: [Comparative answer]
-
-   **Q: On what core issues do all authors agree?**
-   A: [Synthesized answer]
-
-   **Q: What explains their disagreements?**
-   A: [Analysis of root causes]
-
-   ## Thought-Provoking Questions
-   [Generate questions that require synthesizing across texts]
-   ```
-
-### Progressive Deep Reading
-
-When user returns to a previously read document:
-
-1. **Retrieve previous notes** from `~/.claude/skills/deep-reading/notes/`
-2. **Identify next level** (Inspectional → Analytical → Comparative)
-3. **Build on previous analysis** - don't repeat, deepen
-4. **Update notes** with new insights
-
-## Note Archive System
-
-**Directory structure:**
-```
-~/.claude/skills/deep-reading/
-  notes/
-    index.md                           # Master index of all readings
-    sources/                           # Individual document notes (by source)
-      youtube_YvWU4Zd-IMc/
-        metadata.json                  # Source info, date, tags, progress
-        transcript.txt                 # Original content (if applicable)
-        inspectional.md                # Inspectional reading notes
-        analytical.md                  # Analytical reading notes (if done)
-      arxiv_2301_xxxxx/
-        metadata.json
-        ...
-    themes/                            # Comparative reading notes
-      cortisol-regulation-comparison.md
-```
-
-**Configuration:**
-The notes directory location can be customized via environment variable:
 ```bash
-export DEEP_READING_NOTES_DIR="~/Documents/ReadingNotes"
-```
-Default: `~/.claude/skills/deep-reading/notes/`
+# 列出所有已下载内容
+python3 -m src.player.cli -l
 
-**Source ID format:**
-- YouTube: `youtube_{video_id}`
-- URLs: `{domain}_{path_slug}`
-- PDFs: `local_{filename}`
-- Arxiv: `arxiv_{paper_id}`
-
-**metadata.json template:**
-```json
-{
-  "source": "https://youtube.com/watch?v=xxx",
-  "type": "youtube",
-  "title": "Video Title",
-  "author": "Channel Name",
-  "date_added": "2026-01-20",
-  "date_read": "2026-01-20",
-  "tags": ["neuroscience", "cortisol", "sleep"],
-  "reading_levels": ["inspectional"],
-  "progress": "complete"
-}
+# 播放指定内容 (交互式，需要用户操作)
+python3 -m src.player.cli SOURCE_ID
 ```
 
-## Common Mistakes
+### 3. 查看生成的笔记
 
-| Mistake | Why It's Wrong | Fix |
-|---------|----------------|-----|
-| Skip to analytical immediately | You need overview to know what's important | Always start with inspectional unless user explicitly requests deep analysis |
-| Copy-paste content | Summarizing demonstrates understanding | Always synthesize in your own words |
-| Ignore document structure | Structure reveals author's intent | Map structure before diving into content |
-| One-note summarization | Different purposes need different outputs | Generate appropriate format for each reading level |
-| Don't save reading notes | Can't build on previous reading | Always archive for progressive deepening |
-| Treat all texts the same | Fiction needs different approach than philosophy | Adjust protocol based on genre |
+笔记保存在: `~/smart notes/DeepReading/Sources/`
 
-## Tool Integration
+## 完整工作流示例
 
-**For URLs:**
-```yaml
-Tool: mcp__web_reader__webReader
-Parameters:
-  - url: string (required)
-  - return_format: "markdown" (recommended)
-  - retain_images: true
-```
+**用户:** "帮我深度阅读这个视频 https://www.youtube.com/watch?v=RSNuB9pj9P8"
 
-**For YouTube Videos:**
+**AI 操作:**
 ```bash
-~/.claude/skills/deep-reading/fetch-youtube-transcript.sh "url"
-# Downloads transcript and outputs clean text to stdout
-# Saves processed transcript to ~/.claude/skills/deep-reading/notes/transcripts/
+cd /Users/liweixin/.claude/skills/deep-reading
+
+# 1. 下载视频内容
+python3 -m src.fetcher.cli "https://www.youtube.com/watch?v=RSNuB9pj9P8"
+
+# 2. 生成检视阅读报告到 Obsidian
+python3 -m src.processor.cli youtube_RSNuB9pj9P8
 ```
 
-**For PDFs:**
-```yaml
-Tool: Read
-Parameters:
-  - file_path: string (required)
+**AI 回复:**
+"已完成！
+- 📥 下载了视频: [标题]
+- 📝 生成了检视阅读报告: ~/smart notes/DeepReading/Sources/[标题].md
+- 🎧 如需播放音频，请告诉我
+
+笔记包含：
+- 视频元信息
+- 快速摘要（待 AI 分析后填充）
+- 核心观点
+- 关键概念
+- 思考问题
+
+是否需要我帮你播放这个视频？"
+
+## 缓存和数据位置
+
+```
+~/.deep-reading/
+├── cache/youtube/{video_id}/
+│   ├── audio.mp3        # 音频文件
+│   ├── transcript.vtt   # 带时间戳的字幕
+│   ├── transcript.txt   # 纯文本字幕
+│   └── metadata.json    # 视频元数据
+├── db/deep_reading.db   # SQLite 数据库
+└── config.py            # 配置文件
+
+~/smart notes/DeepReading/
+└── Sources/             # Obsidian 笔记
+    └── {视频标题}.md
 ```
 
-Claude can natively read PDF files with visual understanding.
+## 播放控制键 (告知用户)
 
-## Command Pattern
+| 按键 | 功能 |
+|------|------|
+| `空格` | 暂停/播放 |
+| `j` | 快进 30 秒 |
+| `k` | 后退 10 秒 |
+| `J` | 快进 60 秒 |
+| `K` | 后退 30 秒 |
+| `+` / `=` | 加速 |
+| `-` | 减速 |
+| `q` | 退出 |
 
-When user says:
-- "Read this [URL/PDF]" → Start with Inspectional, offer deeper levels
-- "Analyze this [URL/PDF]" → Jump to Analytical Reading
-- "Watch/read this YouTube video" → Fetch transcript and apply reading level
-- "Compare these documents" → Comparative Reading
-- "Continue reading [title]" → Progressive deepening from archive
+## 错误处理
 
-### Video-Specific Protocol
+1. **无字幕**: 某些视频可能没有字幕，会报错
+2. **网络问题**: 下载失败时提示用户检查网络
+3. **已存在**: 如果内容已下载，会使用缓存
 
-For YouTube videos, adapt the reading protocols:
+## 后续功能 (M2-M6)
 
-**Inspectional for Video:**
-- Get title, channel, duration from metadata
-- Scan transcript for topic sentences (first segments of sections)
-- Identify key themes and speaker's main thesis
-- Note video structure (intro, main points, conclusion)
-
-**Analytical for Video:**
-- Identify speaker's argument and evidence
-- Note visual/auditory cues mentioned in speech
-- Extract examples and anecdotes used
-- Evaluate completeness and persuasiveness of argument
+- M2: TUI 播放器 + 字幕同步
+- M3: AI 自动章节分割 + 概念卡片
+- M4: Obsidian 双链自动生成
+- M5: 播客支持
+- M6: 网页支持
